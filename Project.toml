@@ -1,0 +1,13 @@
+name = "Opal"
+uuid = "81530b0b-e860-4d32-b636-0eb2a45cc020"
+authors = ["Hugo Solleder <hugo.solleder@epfl.ch> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
