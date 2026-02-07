@@ -14,7 +14,7 @@ end
 function _url(opal, args...)
     parts = filter(x -> x != "", collect(args))
     encoded_parts = map(escapepath, parts)
-    full_url = join([opal[:url], "ws", encoded_parts...], "/")
+    full_url = join([opal.url, "ws", encoded_parts...], "/")
     return replace(full_url, r"(?<!:)//+" => "/")
 end
 
@@ -49,33 +49,34 @@ function _opal_login(;
     opts::Dict=Dict(),
     profile=nothing,
     restore=nothing,
-    context="r",
+    context::String="r",
 )
-    if context != "r" && context != "datashield"
-        error("R session type must be either 'r' or 'datashield'")
+    if context ∉ ("r", "datashield")
+        throw(ArgumentError("R session type must be either 'r' or 'datashield'"))
     end
+
     if isnothing(url)
-        error("opal url is required")
+        throw(ArgumentError("opal url is required"))
     end
 
     opalUrl = url
     if startswith(url, "http://localhost:")
         @warn "Connecting through non-secure http"
     elseif startswith(url, "http://")
-        error("Connecting through secure http is required.")
+        throw(ErrorException("Connecting through secure http is required."))
     end
 
     urlObj = URI(opalUrl)
 
     opal = Dict{Symbol,Any}()
-    opal[:username] = username
-    opal[:url] = rstrip(opalUrl, '/')
-    opal[:name] = urlObj.host
-    opal[:version] = missing
-    opal[:encoding] = "UTF-8"
-
+    opal = OpalObject()
+    opal.username = username
+    opal.url = rstrip(opalUrl, '/')
+    opal.name = urlObj.host
+    opal.version = missing
+    opal.encoding = "UTF-8"
     if haskey(opts, "encoding")
-        opal[:encoding] = opts["encoding"]
+        opal.encoding = opts["encoding"]
         delete!(opts, "encoding")
     end
 
@@ -101,15 +102,15 @@ function _opal_login(;
     end
 
     # authentication strategies
-    opal[:authorization] = nothing
-    opal[:token] = nothing
+    opal.authorization = nothing
+    opal.token = nothing
     if !isnothing(username) &&
         !isempty(username) &&
         !isnothing(password) &&
         !isempty(password)
-        opal[:authorization] = _authorizationHeader(username, password)
+        opal.authorization = _authorizationHeader(username, password)
     elseif !isnothing(token) && !isempty(token)
-        opal[:token] = _tokenHeader(token)
+        opal.token = _tokenHeader(token)
     elseif haskey(http_options, "sslcert") && haskey(http_options, "sslkey")
         if haskey(http_options, "cainfo")
             http_options["cainfo"] = _getPEMFilePath(http_options["cainfo"])
@@ -122,20 +123,20 @@ function _opal_login(;
         )
     end
 
-    opal[:config] = http_options
-    opal[:rid] = nothing
-    opal[:restore] = restore
-    opal[:profile] = profile
+    opal.config = http_options
+    opal.rid = nothing
+    opal.restore = restore
+    opal.profile = profile
 
     # get user profile to test sign-in
     profileUrl = _url(opal, "system", "subject-profile", "_current")
 
     headers = Dict()
-    if !isnothing(opal[:authorization])
-        headers["Authorization"] = opal[:authorization]
+    if !isnothing(opal.authorization)
+        headers["Authorization"] = opal.authorization
     end
-    if !isnothing(opal[:token])
-        headers["X-Opal-Auth"] = opal[:token]
+    if !isnothing(opal.token)
+        headers["X-Opal-Auth"] = opal.token
     end
 
     r = try
@@ -153,7 +154,7 @@ function _opal_login(;
                     headers=headers,
                     cookies=true,
                     cookiejar=cookiejar,
-                    opal[:config]...,
+                    opal.config...,
                 )
             else
                 rethrow(e)
@@ -163,17 +164,13 @@ function _opal_login(;
         end
     end
 
-    opal[:uprofile] = Dict{String,Any}()
+    opal.uprofile = Dict{String,Any}()
+    # opal.username = opal.uprofile["principal"]
 
-    # opal[:uprofile] = _handleResponse(opal, r)
-    # opal[:username] = opal[:uprofile]["principal"]
-
-    # if get(opal[:uprofile], "otpRequired", false)
+    # if get(opal.uprofile, "otpRequired", false)
     #     @warn "Enabling 2FA is required, connect to Opal web page to set up your secret."
     # end
-    opal[:context] = context
+    opal.context = context
 
     return opal
-    # return OpalConnection(;opal...)
-    # return r
 end
