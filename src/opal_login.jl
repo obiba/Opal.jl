@@ -1,4 +1,3 @@
-
 # This is a placeholder for the .handleResponse function which needs to be defined.
 function _handleResponse(opal, r)
     # Assuming the response body is JSON and needs to be parsed.
@@ -14,7 +13,7 @@ end
 
 function _url(opal, args...)
     parts = filter(x -> x != "", collect(args))
-    encoded_parts = map(URIs.escapepath, parts)
+    encoded_parts = map(escapepath, parts)
     full_url = join([opal[:url], "ws", encoded_parts...], "/")
     return replace(full_url, r"(?<!:)//+" => "/")
 end
@@ -140,15 +139,15 @@ function _opal_login(;
     end
 
     r = try
-        HTTP.request("GET", profileUrl; headers=headers, opal[:config]...)
+        request("GET", profileUrl; headers=headers, opal.config...)
     catch e
-        if isa(e, HTTP.Exceptions.StatusError) && e.status == 401
-            optHeader = HTTP.header(e.response, "WWW-Authenticate", "")
+        if isa(e, StatusError) && e.status == 401
+            optHeader = header(e.response, "WWW-Authenticate", "")
             if optHeader == "X-Opal-TOTP" || optHeader == "X-Obiba-TOTP"
                 print("Enter 6-digits code: ")
                 code = readline()
                 headers[optHeader] = code
-                HTTP.request(
+                request(
                     "GET",
                     profileUrl;
                     headers=headers,
