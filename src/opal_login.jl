@@ -26,6 +26,37 @@ function _tokenHeader(token)
     return token
 end
 
+abstract type AbstractAuthStrategy end
+struct UserPasswordAuth <: AbstractAuthStrategy
+    username::String
+    password::String
+end
+
+struct TokenAuth <: AbstractAuthStrategy
+    token::String
+end
+
+struct SSLAuth <: AbstractAuthStrategy
+    sslcert::String
+    sslkey::String
+end
+
+function authenticate!(opal, strategy::UserPasswordAuth)
+    opal.authorization = _authorizationHeader(strategy.username, strategy.password)
+end
+
+function authenticate!(opal, strategy::TokenAuth)
+    opal.token = _tokenHeader(strategy.token)
+end
+
+function authenticate!(opal, strategy::SSLAuth)
+    if haskey(opal.config, "cainfo")
+        opal.config["cainfo"] = _getPEMFilePath(opal.config["cainfo"])
+    end
+    opal.config["sslcert"] = _getPEMFilePath(strategy.sslcert)
+    opal.config["sslkey"] = _getPEMFilePath(strategy.sslkey)
+end
+
 """
     _opal_login() -> OpalConnection
 
@@ -104,24 +135,25 @@ function _opal_login(;
     # authentication strategies
     opal.authorization = nothing
     opal.token = nothing
-    if !isnothing(username) &&
-        !isempty(username) &&
-        !isnothing(password) &&
-        !isempty(password)
-        opal.authorization = _authorizationHeader(username, password)
-    elseif !isnothing(token) && !isempty(token)
-        opal.token = _tokenHeader(token)
-    elseif haskey(http_options, "sslcert") && haskey(http_options, "sslkey")
-        if haskey(http_options, "cainfo")
-            http_options["cainfo"] = _getPEMFilePath(http_options["cainfo"])
+    strategy =
+        if !isnothing(username) &&
+            !isempty(username) &&
+            !isnothing(password) &&
+            !isempty(password)
+            UserPasswordAuth(username, password)
+        elseif !isnothing(token) && !isempty(token)
+            TokenAuth(token)
+        elseif haskey(http_options, "sslcert") && haskey(http_options, "sslkey")
+            SSLAuth(http_options["sslcert"], http_options["sslkey"])
+        else
+            throw(
+                ArgumentError(
+                    "opal authentication strategy not identified: either provide username/password or API access token or SSL certificate/private keys",
+                ),
+            )
         end
-        http_options["sslcert"] = _getPEMFilePath(http_options["sslcert"])
-        http_options["sslkey"] = _getPEMFilePath(http_options["sslkey"])
-    else
-        error(
-            "opal authentication strategy not identified: either provide username/password or API access token or SSL certificate/private keys",
-        )
-    end
+
+    authenticate!(opal, strategy)
 
     opal.config = http_options
     opal.rid = nothing
