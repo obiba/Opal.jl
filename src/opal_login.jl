@@ -58,7 +58,7 @@ function authenticate!(opal, strategy::SSLAuth)
 end
 
 """
-    _opal_login() -> OpalConnection
+    opal_login() -> OpalConnection
 
 Logs into an Opal server and returns an OpalConnection object.
 
@@ -72,6 +72,29 @@ Logs into an Opal server and returns an OpalConnection object.
 - `restore=nothing`: Workspace ID to be restored
 - `context="r"`: Context of the R session to be created. Either "r" (default) or "datashield".
 """
+#TODO: account for url being a vector of urls
+function opal_login(;
+    username::Union{String,Nothing}=nothing,
+    password::Union{String,Nothing}=nothing,
+    token::Union{String,Nothing}=nothing,
+    url::Union{String,Nothing}=nothing,
+    opts::Dict=Dict(),
+    profile=nothing,
+    restore=nothing,
+    context::String="r",
+)
+    return _opal_login(;
+        username=username,
+        password=password,
+        token=token,
+        url=url,
+        opts=opts,
+        profile=profile,
+        restore=restore,
+        context=context,
+    )
+end
+
 function _opal_login(;
     username::Union{String,Nothing}=nothing,
     password::Union{String,Nothing}=nothing,

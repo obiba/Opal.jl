@@ -7,5 +7,6 @@ using HTTP.Exceptions: StatusError
 
 include("OpalObject.jl")
 include("opal_login.jl")
+export opal_login
 
 end
