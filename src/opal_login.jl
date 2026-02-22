@@ -1,16 +1,3 @@
-# This is a placeholder for the .handleResponse function which needs to be defined.
-function _handleResponse(opal, r)
-    # Assuming the response body is JSON and needs to be parsed.
-    return JSON.parse(String(r.body))
-end
-
-# This is a placeholder for the .getPEMFilePath function which needs to be defined.
-function _getPEMFilePath(path)
-    # This function should return a valid path to a PEM file.
-    # For now, it just returns the input path.
-    return path
-end
-
 function _url(opal, args...)
     parts = filter(x -> x != "", collect(args))
     encoded_parts = map(escapepath, parts)

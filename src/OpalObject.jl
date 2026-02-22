@@ -9,10 +9,11 @@ mutable struct OpalObject
     authorization::Union{String,Nothing}
     token::Union{String,Nothing}
     config::Dict{Symbol,Any}
-    rid::Union{Int,Nothing}
-    restore::Union{Bool,Nothing}
+    rid::Union{String,Nothing}
+    restore::Union{String,Nothing}
     profile::Union{String,Nothing}
     context::String
+    sid::Union{String,Nothing}
 end
 
 function OpalObject(; kwargs...)
@@ -30,5 +31,6 @@ function OpalObject(; kwargs...)
         get(kwargs, :restore, nothing),
         get(kwargs, :profile, nothing),
         get(kwargs, :context, "r"),
+        get(kwargs, :sid, nothing),
     )
 end
