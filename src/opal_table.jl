@@ -10,13 +10,12 @@ Get a table from a datasource.
 - `counts::Bool=false`: Flag to get the number of variables and entities
 """
 function opal_table(opal::OpalObject, datasource::String, table::String; counts::Bool=false)
+    query = Dict{String,Any}()
     if counts
-        opal_get(
-            opal, "datasource", datasource, "table", table; query=Dict("counts" => "true")
-        )
-    else
-        opal_get(opal, "datasource", datasource, "table", table)
+        query["counts"] = true
     end
+
+    return opal_get(opal, "datasource", datasource, "table", table; query=query)
 end
 
 """
