@@ -9,6 +9,13 @@ Get the resource references of a project.
 - `df::Bool=true`: Return a DataFrame (not implemented, returns raw response)
 """
 function opal_resources(opal::OpalObject, project::String; df::Bool=true)
+    if !ismissing(opal.version) && opal.version < v"3.0"
+        throw(
+            ErrorException(
+                "Resources are not available in opal $(opal.version) (3.0.0 or higher is required)",
+            ),
+        )
+    end
     res = opal_get(opal, "project", project, "resources")
 
     if !df

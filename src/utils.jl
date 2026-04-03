@@ -125,10 +125,10 @@ function _handleResponse(opal, response)
     headers = HTTP.headers(response)
 
     # Extract Opal version
-    if isnothing(opal.version) || ismissing(opal.version)
+    if ismissing(opal.version)
         for (key, value) in headers
             if lowercase(key) == "x-opal-version"
-                opal.version = value
+                opal.version = parse(VersionNumber, value)
                 break
             end
         end
@@ -167,10 +167,10 @@ function _handleResponseLocation(opal, response)
     headers = HTTP.headers(response)
 
     # Extract Opal version
-    if isnothing(opal.version) || ismissing(opal.version)
+    if ismissing(opal.version)
         for (key, value) in headers
             if lowercase(key) == "x-opal-version"
-                opal.version = value
+                opal.version = parse(VersionNumber, value)
                 break
             end
         end
