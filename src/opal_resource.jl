@@ -15,11 +15,18 @@ function opal_resources(opal::OpalObject, project::String; df::Bool=true)
         return res
     end
 
-    # Note: DataFrame conversion is not implemented
-    # The R version converts to data.frame with columns: name, project, url, format, created, updated
-    # For now, return the raw response
-    # TODO: Implement DataFrame conversion when DataFrames.jl integration is added
-    return res
+    if isempty(res)
+        return DataFrame(; name=String[], url=String[], format=String[])
+    end
+
+    df = DataFrame(res)
+    transform!(
+        df,
+        :resource => ByRow(x -> haskey(x, "url") ? x["url"] : missing) => :url,
+        :resource => ByRow(x -> haskey(x, "format") ? x["format"] : missing) => :format,
+    )
+
+    return select!(df, Not(:resource, :parameters, :editable, :factory))
 end
 
 """
