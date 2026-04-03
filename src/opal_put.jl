@@ -46,7 +46,7 @@ function opal_put(
                 continue
             end
 
-            return _handleResponseOrCallback(opal, r, callback)
+            return _handleResponseOrCallback!(opal, r, callback)
         catch e
             last_error = e
             if attempt == retry_times
@@ -58,7 +58,7 @@ function opal_put(
     # If we got here, we exhausted retries
     if !isnothing(last_error)
         if isa(last_error, HTTP.Response)
-            return _handleResponseOrCallback(opal, last_error, callback)
+            return _handleResponseOrCallback!(opal, last_error, callback)
         else
             rethrow(last_error)
         end

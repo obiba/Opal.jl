@@ -121,7 +121,7 @@ function opal_resource_create(
     identity::Union{String,Nothing}=nothing,
     secret::Union{String,Nothing}=nothing,
 )
-    parameters = Dict("url" => url)
+    parameters = Dict{String,Any}("url" => url)
     if !isnothing(format)
         parameters["format"] = format
     end
@@ -146,9 +146,9 @@ function opal_resource_create(
         project,
         name,
         "resourcer",
-        "default";
+        "default",
+        parameters;
         description=description,
-        parameters=parameters,
         credentials=credentials,
     )
 end

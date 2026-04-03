@@ -120,8 +120,12 @@ end
 
 """
 Default request response handler.
+
+# Arguments
+- `opal::OpalObject`: Opal object
+- `response::HTTP.Response`: HTTP response object
 """
-function _handleResponse(opal, response)
+function _handleResponse!(opal, response)
     headers = HTTP.headers(response)
 
     # Extract Opal version
@@ -163,7 +167,7 @@ end
 """
 Default request response Location header handler.
 """
-function _handleResponseLocation(opal, response)
+function _handleResponseLocation!(opal, response)
     headers = HTTP.headers(response)
 
     # Extract Opal version
@@ -204,9 +208,9 @@ end
 """
 Process response with default handler or the provided one.
 """
-function _handleResponseOrCallback(opal, response, callback=nothing)
+function _handleResponseOrCallback!(opal, response, callback=nothing)
     if isnothing(callback)
-        return _handleResponse(opal, response)
+        return _handleResponse!(opal, response)
     else
         return callback(opal, response)
     end

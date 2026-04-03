@@ -40,5 +40,5 @@ function opal_get(
         end
     end
 
-    _handleResponseOrCallback(opal, r, callback)
+    return _handleResponseOrCallback!(opal, r, callback)
 end

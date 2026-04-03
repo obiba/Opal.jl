@@ -206,7 +206,7 @@ function _opal_login(;
         end
     end
 
-    opal.uprofile = Dict{String,Any}()
+    opal.uprofile = _handleResponse!(opal, r)
     # opal.username = opal.uprofile["principal"]
 
     # if get(opal.uprofile, "otpRequired", false)
