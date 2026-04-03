@@ -3,7 +3,7 @@ mutable struct OpalObject
     username::String
     url::String
     name::String
-    version::Union{String,Missing}
+    version::Union{VersionNumber,Missing}
     encoding::String
     uprofile::Dict{String,Any}
     authorization::Union{String,Nothing}
