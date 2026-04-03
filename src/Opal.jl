@@ -5,6 +5,7 @@ using Base64: base64encode
 using HTTP: request, header
 using HTTP.Exceptions: StatusError
 using JSON
+using DataFrames: DataFrame, transform!, select!, ByRow, Not
 
 include("OpalObject.jl")
 include("utils.jl")
