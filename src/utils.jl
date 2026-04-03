@@ -17,6 +17,16 @@ function _extractOpalSessionId(response)
     return nothing
 end
 
+function _extractOpalCSRFToken(response)
+    cookies = HTTP.cookies(response)
+    for cookie in cookies
+        if cookie.name == "XSRF-TOKEN" && !isnothing(cookie.value)
+            return cookie.value
+        end
+    end
+    return nothing
+end
+
 """
 Check if response content is empty.
 """
@@ -143,6 +153,10 @@ function _handleResponse!(opal, response)
         opal.sid = _extractOpalSessionId(response)
     end
 
+    if isnothing(opal.csrf)
+        opal.csrf = _extractOpalCSRFToken(response)
+    end
+
     if response.status >= 300
         _handleError(opal, response)
     end
@@ -183,6 +197,10 @@ function _handleResponseLocation!(opal, response)
     # Extract Opal session ID
     if isnothing(opal.sid)
         opal.sid = _extractOpalSessionId(response)
+    end
+
+    if isnothing(opal.csrf)
+        opal.csrf = _extractOpalCSRFToken(response)
     end
 
     if response.status >= 300

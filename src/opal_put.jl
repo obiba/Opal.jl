@@ -29,6 +29,9 @@ function opal_put(
     if !isnothing(opal.token)
         headers["X-Opal-Auth"] = opal.token
     end
+    if !isnothing(opal.csrf)
+        headers["X-XSRF-Token"] = opal.csrf
+    end
 
     # Retry logic - simplified version
     retry_times = 3

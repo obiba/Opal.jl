@@ -30,6 +30,7 @@ function opal_logout(opal::OpalObject; save::Union{Bool,String}=false)
         nothing
     end
     opal.sid = nothing
+    opal.csrf = nothing
 
     return res
 end

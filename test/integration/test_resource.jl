@@ -4,6 +4,7 @@
 
 using Test
 using Opal
+using DataFrames
 include("../test_helpers.jl")
 
 @testset "Resource List" begin
@@ -15,12 +16,13 @@ include("../test_helpers.jl")
         # Get list of resources in RSRC project
         resources = opal_resources(o, "RSRC")
 
-        @test isa(resources, Union{Vector,Dict})
+        @test isa(resources, DataFrame)
 
         # If there are resources, check structure
-        if isa(resources, Vector) && length(resources) > 0
-            first_resource = resources[1]
-            @test haskey(first_resource, "name")
+        if nrow(resources) > 0
+            @test hasproperty(resources, :name)
+            @test hasproperty(resources, :url)
+            @test hasproperty(resources, :format)
         end
 
         # Check no R session was created
@@ -38,10 +40,6 @@ end
     try
         # Check for a resource that doesn't exist
         @test !opal_resource_exists(o, "RSRC", "NONEXISTENT_RESOURCE_12345")
-
-        # Note: We can't guarantee any specific resource exists
-        # but we can test the function works
-        @test true
 
         # Check no R session was created
         @test isnothing(o.rid)
@@ -150,7 +148,9 @@ end
         end
 
         # Create extended resource with custom provider and factory
-        parameters = Dict("url" => "https://example.org/data.csv", "format" => "csv")
+        parameters = Dict{String,Any}(
+            "url" => "https://example.org/data.csv", "format" => "csv"
+        )
 
         opal_resource_extension_create(
             o,

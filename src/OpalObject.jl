@@ -14,6 +14,7 @@ mutable struct OpalObject
     profile::Union{String,Nothing}
     context::String
     sid::Union{String,Nothing}
+    csrf::Union{String,Nothing}
 end
 
 function OpalObject(; kwargs...)
@@ -32,5 +33,6 @@ function OpalObject(; kwargs...)
         get(kwargs, :profile, nothing),
         get(kwargs, :context, "r"),
         get(kwargs, :sid, nothing),
+        get(kwargs, :csrf, nothing),
     )
 end

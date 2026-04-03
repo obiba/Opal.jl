@@ -34,6 +34,9 @@ function opal_post(
     if !isnothing(opal.token)
         headers["X-Opal-Auth"] = opal.token
     end
+    if !isnothing(opal.csrf)
+        headers["X-XSRF-Token"] = opal.csrf
+    end
 
     r = if isnothing(outFile)
         HTTP.request(

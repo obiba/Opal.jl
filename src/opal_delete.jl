@@ -12,7 +12,7 @@ Generic REST resource deletion.
 function opal_delete(
     opal::OpalObject,
     args...;
-    query::Dict{String,Any}=Dict(),
+    query::Dict{String,Any}=Dict{String,Any}(),
     callback::Union{Function,Nothing}=nothing,
     retries::Int=3,
 )
@@ -25,6 +25,9 @@ function opal_delete(
     end
     if !isnothing(opal.token)
         headers["X-Opal-Auth"] = opal.token
+    end
+    if !isnothing(opal.csrf)
+        headers["X-XSRF-Token"] = opal.csrf
     end
 
     r = request(

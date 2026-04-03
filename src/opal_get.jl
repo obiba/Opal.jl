@@ -13,6 +13,10 @@ function opal_get(
     logerrors = false
     headers = Dict("Accept" => acceptType)
 
+    if !isnothing(opal.csrf)
+        headers["X-XSRF-Token"] = opal.csrf
+    end
+
     url = _url(opal, args...)
     r = if isnothing(outFile)
         request(
