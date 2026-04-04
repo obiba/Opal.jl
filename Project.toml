@@ -1,7 +1,7 @@
 name = "Opal"
 uuid = "81530b0b-e860-4d32-b636-0eb2a45cc020"
-authors = ["Hugo Solleder <hugo.solleder@epfl.ch> and contributors"]
 version = "1.0.0-DEV"
+authors = ["Hugo Solleder <hugo.solleder@epfl.ch> and contributors"]
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -14,7 +14,7 @@ URIs = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
 Base64 = "1.11.0"
 DataFrames = "1.8.1"
 HTTP = "1.10.19"
-JSON = "0.21"
+JSON = "0.21, 1"
 URIs = "1.6.1"
 julia = "1.10"
 
