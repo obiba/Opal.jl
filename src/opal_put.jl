@@ -17,7 +17,9 @@ function opal_put(
     query::Dict{String,Any}=Dict(),
     body::String="",
     contentType::String="application/x-rscript",
+    outFile::Union{String,Nothing}=nothing,
     callback::Union{Function,Nothing}=nothing,
+    retries::Int=3,
 )
     url = _url(opal, args...)
     headers = Dict("Content-Type" => contentType)
@@ -33,37 +35,33 @@ function opal_put(
         headers["X-XSRF-Token"] = opal.csrf
     end
 
-    # Retry logic - simplified version
-    retry_times = 3
-    last_error = nothing
-
-    for attempt in 1:retry_times
-        try
-            r = HTTP.request(
-                "PUT", url; query=query, body=body, headers=headers, status_exception=false
+    r = if isnothing(outFile)
+        HTTP.request(
+            "PUT",
+            url;
+            query=query,
+            body=body,
+            headers=headers,
+            status_exception=false,
+            retry=true,
+            retries=retries,
+        )
+    else
+        # Write to file
+        open(outFile, "w") do io
+            HTTP.request(
+                "PUT",
+                url;
+                query=query,
+                body=body,
+                headers=headers,
+                response_stream=io,
+                status_exception=false,
+                retry=true,
+                retries=retries,
             )
-
-            # Check if we should retry based on status
-            if r.status >= 400 && r.status < 600 && attempt < retry_times
-                last_error = r
-                continue
-            end
-
-            return _handleResponseOrCallback!(opal, r, callback)
-        catch e
-            last_error = e
-            if attempt == retry_times
-                rethrow(e)
-            end
         end
     end
 
-    # If we got here, we exhausted retries
-    if !isnothing(last_error)
-        if isa(last_error, HTTP.Response)
-            return _handleResponseOrCallback!(opal, last_error, callback)
-        else
-            rethrow(last_error)
-        end
-    end
+    return _handleResponseOrCallback!(opal, r, callback)
 end
