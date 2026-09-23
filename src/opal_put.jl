@@ -14,7 +14,7 @@ Generic REST resource update.
 function opal_put(
     opal::OpalObject,
     args...;
-    query::Dict{String,Any}=Dict(),
+    query::Dict{String,Any}=Dict{String,Any}(),
     body::String="",
     contentType::String="application/x-rscript",
     outFile::Union{String,Nothing}=nothing,
