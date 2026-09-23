@@ -3,6 +3,7 @@
 
 using Test
 using Opal
+using HTTP
 using JSON
 
 @testset "URL Cleaning" begin
@@ -126,4 +127,133 @@ end
 
     # Note: _newSession requires an OpalObject and makes HTTP requests,
     # so it's tested in integration tests instead
+end
+
+@testset "Session Cookie Extraction" begin
+    response = HTTP.Response(
+        200,
+        [
+            "Set-Cookie" => "opalsid=abc123; Path=/",
+            "Set-Cookie" => "XSRF-TOKEN=tok456; Path=/",
+        ],
+    )
+    @test Opal._extractOpalSessionId(response) == "abc123"
+    @test Opal._extractOpalCSRFToken(response) == "tok456"
+
+    # no cookies returns nothing
+    response = HTTP.Response(200)
+    @test isnothing(Opal._extractOpalSessionId(response))
+    @test isnothing(Opal._extractOpalCSRFToken(response))
+end
+
+@testset "Version Compare" begin
+    opal = Opal.OpalObject(version=parse(VersionNumber, "5.1.4"))
+    @test Opal._versionCompare(opal, "5.1") == 1
+    @test Opal._versionCompare(opal, "5.1.4") == 0
+    @test Opal._versionCompare(opal, "5.0") == 1
+    @test Opal._versionCompare(opal, "5.2") == -1
+    @test Opal._versionCompare(opal, "3.2") == 1
+
+    # prerelease versions are compared without their pre-release suffix
+    opal = Opal.OpalObject(version=parse(VersionNumber, "5.1.4-rc1"))
+    @test Opal._versionCompare(opal, "5.1.4") == 0
+    @test Opal._versionCompare(opal, "5.1.3") == 1
+    @test Opal._versionCompare(opal, "5.1.5") == -1
+
+    # missing version raises an error
+    opal = Opal.OpalObject(version=missing)
+    @test_throws ErrorException Opal._versionCompare(opal, "5.1")
+end
+
+@testset "List To JSON" begin
+    @test Opal._listToJson(Dict("a" => "b")) == "{\"a\": \"b\"}"
+    @test Opal._listToJson(["x", "y"]) == "[\"x\",\"y\"]"
+    @test Opal._listToJson(Dict("n" => true)) == "{\"n\": true}"
+    @test Opal._listToJson(Dict("n" => false)) == "{\"n\": false}"
+    @test Opal._listToJson(42) == "\"42\""
+    @test Opal._listToJson("v") == "\"v\""
+end
+
+@testset "Deparse" begin
+    @test Opal._deparse("c(1, 2, 3)") == "c(1, 2, 3)"
+    @test Opal._deparse(:(a + b)) == "a + b"
+end
+
+@testset "Extract Label" begin
+    labels = [
+        Dict("name" => "label", "locale" => "en", "value" => "Age"),
+        Dict("name" => "label", "locale" => "fr", "value" => "Âge"),
+    ]
+    @test Opal._extractLabel("en", labels) == "Age"
+    @test Opal._extractLabel("fr", labels) == "Âge"
+    # fallback to undefined locale label
+    labels = [Dict("name" => "label", "value" => "Age")]
+    @test Opal._extractLabel("en", labels) == "Age"
+    # no labels
+    @test ismissing(Opal._extractLabel("en", []))
+end
+
+@testset "Split Attribute Key" begin
+    attr = Opal._splitAttributeKey("ns::name")
+    @test attr["namespace"] == "ns"
+    @test attr["name"] == "name"
+    @test !haskey(attr, "locale")
+
+    attr = Opal._splitAttributeKey("ns::name:en")
+    @test attr["namespace"] == "ns"
+    @test attr["name"] == "name"
+    @test attr["locale"] == "en"
+
+    attr = Opal._splitAttributeKey("label")
+    @test !haskey(attr, "namespace")
+    @test attr["name"] == "label"
+    @test !haskey(attr, "locale")
+
+    attr = Opal._splitAttributeKey("label:en")
+    @test !haskey(attr, "namespace")
+    @test attr["name"] == "label"
+    @test attr["locale"] == "en"
+end
+
+@testset "Merge Char Vectors" begin
+    left = ["a", "b"]
+    right = ["x | y", "c"]
+    merged = Opal._mergeCharVectors(left, right)
+    @test merged[1] == "a | x | y"
+    @test merged[2] == "b | c"
+end
+
+@testset "Norm to NA String" begin
+    @test Opal._norm2nastr("value") == "value"
+    @test Opal._norm2nastr(nothing) == "N/A"
+    @test Opal._norm2nastr("") == "N/A"
+    @test Opal._norm2nastr(123) == "123"
+end
+
+@testset "Localize to String" begin
+    item = [
+        Dict("locale" => "en", "text" => "hello"),
+        Dict("locale" => "fr", "text" => "bonjour"),
+    ]
+    @test Opal._localized2str(item, "fr") == "bonjour"
+    @test Opal._localized2str(item, "en") == "hello"
+    @test Opal._localized2str(item, "de") == ""
+end
+
+@testset "Show Opal Object" begin
+    opal = Opal.OpalObject(
+        name="test",
+        url="https://opal-demo.obiba.org",
+        username="admin",
+        version=parse(VersionNumber, "5.1"),
+        rid="session-rid",
+        profile="default",
+    )
+    printed = sprint(show, MIME"text/plain"(), opal)
+    @test occursin("url: https://opal-demo.obiba.org", printed)
+    @test occursin("name: test", printed)
+    @test occursin("version: 5.1", printed)
+    @test occursin("username: admin", printed)
+    @test occursin("rid: session-rid", printed)
+    @test occursin("profile: default", printed)
 end

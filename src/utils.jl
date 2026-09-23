@@ -171,8 +171,7 @@ function _handleResponse!(opal, response)
     end
 
     if !isnothing(disposition) && occursin("attachment", disposition)
-        # Handle attachment - simplified version
-        return _handleContent(opal, response)
+        return _handleAttachment(opal, response, disposition)
     else
         return _handleContent(opal, response)
     end
@@ -352,4 +351,296 @@ Get all R sessions in Opal.
 """
 function _getSessions(opal)
     return opal_get(opal, opal.context, "sessions")
+end
+
+"""
+Compare Opal version with the provided one. Note that a request must have been
+done in order to have a non-missing Opal version.
+
+# Arguments
+- `opal::OpalObject`: Opal object
+- `version::String`: The semantic version string to be compared
+
+# Returns
+- `>0` if Opal version is more recent, `0` if equals, `<0` otherwise
+"""
+function _versionCompare(opal, version::String)
+    if ismissing(opal.version)
+        throw(ErrorException("opal version is not set"))
+    end
+    ov = VersionNumber(split(string(opal.version), "-")[1])
+    sv = VersionNumber(version)
+    if ov == sv
+        return 0
+    end
+    return ov < sv ? -1 : 1
+end
+
+"""
+Simple transformation function of a dictionary into a JSON object/array string.
+"""
+function _listToJson(value)
+    valueToString = function (v)
+        if v isa AbstractDict || v isa AbstractVector
+            return _listToJson(v)
+        elseif v isa Bool
+            return v ? "true" : "false"
+        else
+            return "\"$(v)\""
+        end
+    end
+    if value isa AbstractDict
+        str = ""
+        for (name, v) in value
+            if !isempty(str)
+                str = str * ","
+            end
+            str = str * "\"$(name)\": " * valueToString(v)
+        end
+        return "{$(str)}"
+    elseif value isa AbstractVector
+        str = ""
+        for v in value
+            if !isempty(str)
+                str = str * ","
+            end
+            str = str * valueToString(v)
+        end
+        return "[$(str)]"
+    else
+        return valueToString(value)
+    end
+end
+
+"""
+Turn expression into character strings.
+"""
+function _deparse(expr)
+    return expr isa String ? expr : string(expr)
+end
+
+"""
+Extract label for locale. If not found, fallback to undefined language label (if any).
+"""
+function _extractLabel(
+    locale::String="en", labels::AbstractVector=[]; localeKey="locale", valueKey="value"
+)
+    if isempty(labels)
+        return missing
+    end
+    label = missing
+    label_und = missing
+    for l in labels
+        if !haskey(l, localeKey)
+            label_und = l[valueKey]
+        elseif l[localeKey] == locale
+            label = l[valueKey]
+        end
+    end
+    return ismissing(label) ? label_und : label
+end
+
+"""
+Split an attribute key of the form "namespace::name", "name" or "name:locale".
+"""
+function _splitAttributeKey(key)
+    str = split(key, ":")
+    namespace = nothing
+    name = nothing
+    loc = nothing
+    if length(str) > 2 && str[2] == ""
+        namespace = str[1]
+        name = str[3]
+        if length(str) == 4
+            loc = str[4]
+        end
+    else
+        name = str[1]
+        if length(str) == 2
+            loc = str[2]
+        end
+    end
+    rval = Dict{String,Any}()
+    if !isnothing(namespace)
+        rval["namespace"] = namespace
+    end
+    rval["name"] = name
+    if !isnothing(loc)
+        rval["locale"] = loc
+    end
+    return rval
+end
+
+"""
+Normalize a value to a string, "N/A" when empty.
+"""
+function _norm2nastr(value)
+    return _isempty(value) ? "N/A" : string(value)
+end
+
+"""
+Extract the text of the item matching the given locale.
+"""
+function _localized2str(item, locale)
+    for msg in item
+        if msg["locale"] == locale
+            return msg["text"]
+        end
+    end
+    return ""
+end
+
+"""
+Merge two vectors of characters, joining non-missing values with " | ".
+"""
+function _mergeCharVectors(left, right)
+    n = max(length(left), length(right))
+    result = Union{Missing,String}[i <= length(left) ? left[i] : missing for i in 1:n]
+    for i in 1:n
+        oval = i <= length(left) ? left[i] : missing
+        nval = i <= length(right) ? right[i] : missing
+        if !ismissing(nval) && !isnothing(nval)
+            result[i] = ismissing(oval) ? string(nval) : "$(oval) | $(nval)"
+        end
+    end
+    return result
+end
+
+"""
+Guess the MIME type of a file from its extension.
+"""
+function _guessType(filename)
+    ext = lowercase(splitext(filename)[2])
+    types = Dict(
+        ".csv" => "text/csv",
+        ".tsv" => "text/tab-separated-values",
+        ".txt" => "text/plain",
+        ".html" => "text/html",
+        ".json" => "application/json",
+        ".xml" => "application/xml",
+        ".pdf" => "application/pdf",
+        ".zip" => "application/zip",
+        ".sav" => "application/x-spss-sav",
+        ".zsav" => "application/x-spss-sav",
+        ".dta" => "application/x-stata-dta",
+        ".xpt" => "application/x-sas-xport",
+        ".sas7bdat" => "application/x-sas-data",
+    )
+    return get(types, ext, "application/octet-stream")
+end
+
+"""
+Handle response attachment.
+"""
+function _handleAttachment(opal, response, disposition)
+    headers = HTTP.headers(response)
+    content = _getContent(opal, response)
+
+    filename = split(disposition, "\"")[2]
+    filetype = _guessType(filename)
+    content_type = nothing
+    for (key, value) in headers
+        if lowercase(key) == "content-type"
+            content_type = value
+            break
+        end
+    end
+
+    if isa(content, Vector{UInt8})
+        if occursin("text/", string(content_type)) ||
+            (occursin("application/", string(content_type)) && occursin("text/", filetype))
+            return String(content)
+        else
+            return content
+        end
+    elseif occursin("text/", string(content_type))
+        return string(content)
+    else
+        return content
+    end
+end
+
+"""
+Print a concise description of the Opal object.
+"""
+function Base.show(io::IO, ::MIME"text/plain", o::OpalObject)
+    println(io, "url: ", o.url)
+    println(io, "name: ", o.name)
+    println(io, "version: ", o.version)
+    println(io, "username: ", o.username)
+    if !isnothing(o.rid)
+        println(io, "rid: ", o.rid)
+    end
+    if !isnothing(o.profile)
+        println(io, "profile: ", o.profile)
+    end
+    if !isnothing(o.restore)
+        println(io, "restore: ", o.restore)
+    end
+end
+
+"""
+    opal_as_md_table(table; icons=true, digits=7, col_names=nothing, align=nothing, caption=nothing) -> String
+
+Get a Markdown table rendition of the provided table (data frame), with bootstrap
+glyph icons for boolean values.
+"""
+function opal_as_md_table(
+    table::DataFrame;
+    icons::Bool=true,
+    digits::Int=7,
+    col_names=nothing,
+    align=nothing,
+    caption=nothing,
+)
+    asIcon = function (a)
+        if a isa Bool || ismissing(a) || (a isa AbstractString && (a == "true" || a == "false"))
+            truthy = a isa Bool ? a : (ismissing(a) ? false : (a == "true"))
+            if truthy
+                return "<span class=\"glyphicon glyphicon-ok alert-success\"></span>"
+            else
+                return "<span class=\"glyphicon glyphicon-remove alert-error\"></span>"
+            end
+        end
+        return a
+    end
+
+    formatValue = function (v)
+        if ismissing(v) || isnothing(v)
+            return ""
+        elseif v isa AbstractFloat
+            return string(round(v; digits=digits))
+        else
+            return string(v)
+        end
+    end
+
+    ncol = size(table, 2)
+    header = isnothing(col_names) ? names(table) : String.(collect(col_names))
+    separator = String[]
+    for i in 1:ncol
+        a = isnothing(align) ? nothing : align[min(i, length(align))]
+        if a == "c"
+            push!(separator, ":---:")
+        elseif a == "r"
+            push!(separator, "---:")
+        else
+            push!(separator, ":---")
+        end
+    end
+
+    lines = String[]
+    if !isnothing(caption)
+        push!(lines, "Table: $(caption)")
+    end
+    push!(lines, "| " * join(header, " | ") * " |")
+    push!(lines, "|" * join(separator, "|") * "|")
+    for r in 1:size(table, 1)
+        values = Any[table[r, c] for c in 1:ncol]
+        if icons
+            values = [asIcon(a) for a in values]
+        end
+        push!(lines, "| " * join([formatValue(v) for v in values], " | ") * " |")
+    end
+    return join(lines, "\n")
 end
