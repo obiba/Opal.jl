@@ -4,7 +4,7 @@
 
 using Test
 using Opal
-using DataFrames
+using DataFrames: DataFrame, nrow
 include("../test_helpers.jl")
 
 @testset "Resource List" begin
@@ -271,7 +271,7 @@ end
         end
 
         # Get resource list - should include our new resources
-        resources = opal_resources(o, "RSRC")
+        resources = opal_resources(o, "RSRC"; df=false)
         @test isa(resources, Union{Vector,Dict})
 
         # Clean up all created resources

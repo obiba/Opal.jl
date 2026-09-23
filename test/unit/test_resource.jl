@@ -23,7 +23,14 @@ using JSON
     @test hasmethod(opal_resource_create, (Opal.OpalObject, String, String, String))
     @test hasmethod(
         opal_resource_extension_create,
-        (Opal.OpalObject, String, String, String, String, Dict{String,Any}),
+        (
+            Opal.OpalObject,
+            AbstractString,
+            AbstractString,
+            AbstractString,
+            AbstractString,
+            Dict{AbstractString,Any},
+        ),
     )
     @test hasmethod(opal_resource_delete, (Opal.OpalObject, String, String))
 end
