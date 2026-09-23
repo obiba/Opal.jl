@@ -178,9 +178,9 @@ function opal_resource_extension_create(
     name::AbstractString,
     provider::AbstractString,
     factory::AbstractString,
-    parameters::Dict{AbstractString,Any};
+    parameters::Dict{<:AbstractString,Any};
     description::Union{AbstractString,Nothing}=nothing,
-    credentials::Union{Dict{AbstractString,Any},Nothing}=nothing,
+    credentials::Union{Dict{<:AbstractString,Any},Nothing}=nothing,
 )
     if !opal_resource_exists(opal, project, name)
         resjson = Dict{String,Any}(
