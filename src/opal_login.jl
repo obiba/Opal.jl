@@ -59,7 +59,6 @@ Logs into an Opal server and returns an OpalConnection object.
 - `restore=nothing`: Workspace ID to be restored
 - `context="r"`: Context of the R session to be created. Either "r" (default) or "datashield".
 """
-#TODO: account for url being a vector of urls
 function opal_login(;
     username::Union{String,Nothing}=nothing,
     password::Union{String,Nothing}=nothing,
@@ -121,27 +120,6 @@ function _opal_login(;
         delete!(opts, "encoding")
     end
 
-    http_options = copy(opts)
-    # legacy RCurl options to httr/HTTP.jl
-    if haskey(http_options, "ssl.verifyhost")
-        http_options["ssl_verifyhost"] = http_options["ssl.verifyhost"]
-        delete!(http_options, "ssl.verifyhost")
-    end
-    if haskey(http_options, "ssl.verifypeer")
-        http_options["require_ssl_verification"] = http_options["ssl.verifypeer"]
-        delete!(http_options, "ssl.verifypeer")
-    end
-
-    if urlObj.host == "localhost"
-        if !haskey(http_options, "ssl_verifyhost")
-            # HTTP.jl does not have a direct equivalent for ssl_verifyhost=false
-            # It's generally handled by require_ssl_verification
-        end
-        if !haskey(http_options, "require_ssl_verification")
-            http_options["require_ssl_verification"] = false
-        end
-    end
-
     # authentication strategies
     opal.authorization = nothing
     opal.token = nothing
@@ -153,8 +131,6 @@ function _opal_login(;
             UserPasswordAuth(username, password)
         elseif !isnothing(token) && !isempty(token)
             TokenAuth(token)
-        elseif haskey(http_options, "sslcert") && haskey(http_options, "sslkey")
-            SSLAuth(http_options["sslcert"], http_options["sslkey"])
         else
             throw(
                 ArgumentError(
@@ -165,7 +141,7 @@ function _opal_login(;
 
     authenticate!(opal, strategy)
 
-    opal.config = http_options
+    opal.config = opts
     opal.rid = nothing
     opal.restore = restore
     opal.profile = profile
@@ -173,7 +149,7 @@ function _opal_login(;
     # get user profile to test sign-in
     profileUrl = _url(opal, "system", "subject-profile", "_current")
 
-    headers = Dict()
+    headers = Dict("Accept" => "application/x-protobuf+json")
     if !isnothing(opal.authorization)
         headers["Authorization"] = opal.authorization
     end
