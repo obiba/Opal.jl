@@ -3,6 +3,7 @@
 
 using Test
 using Opal
+include("../test_helpers.jl")
 
 @testset "Workspace Operations" begin
     check_skip() && return nothing

@@ -4,6 +4,7 @@
 using Test
 using Opal
 using DataFrames: DataFrame
+include("../test_helpers.jl")
 
 @testset "Assign and Symbol Operations" begin
     check_skip() && return nothing

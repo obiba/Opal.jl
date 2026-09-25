@@ -4,6 +4,7 @@
 using Test
 using Opal
 using DataFrames
+include("../test_helpers.jl")
 
 @testset "Task Operations" begin
     check_skip() && return nothing
