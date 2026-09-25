@@ -25,6 +25,34 @@ include("test_helpers.jl")
         @testset "Resource Operations" begin
             include("unit/test_resource.jl")
         end
+
+        @testset "Datasource Operations" begin
+            include("unit/test_datasource.jl")
+        end
+
+        @testset "Workspace Operations" begin
+            include("unit/test_workspace.jl")
+        end
+
+        @testset "Symbol Operations" begin
+            include("unit/test_symbol.jl")
+        end
+
+        @testset "Assignment Operations" begin
+            include("unit/test_assign.jl")
+        end
+
+        @testset "Command Operations" begin
+            include("unit/test_command.jl")
+        end
+
+        @testset "Task Operations" begin
+            include("unit/test_task.jl")
+        end
+
+        @testset "Variables Operations" begin
+            include("unit/test_valueset.jl")
+        end
     end
 
     # Integration Tests - These require a live Opal server
@@ -47,6 +75,18 @@ include("test_helpers.jl")
 
             @testset "Resource Operations" begin
                 include("integration/test_resource.jl")
+            end
+
+            @testset "Workspace Operations" begin
+                include("integration/test_workspace.jl")
+            end
+
+            @testset "Assign/Symbols" begin
+                include("integration/test_assign_symbols.jl")
+            end
+
+            @testset "Task Operations" begin
+                include("integration/test_task.jl")
             end
         end
     else

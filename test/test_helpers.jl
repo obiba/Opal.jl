@@ -152,3 +152,12 @@ Generate a random resource name for testing to avoid conflicts.
 function random_resource_name()
     return "test_resource_$(rand(1000:9999))"
 end
+
+"""
+    random_workspace_name() -> String
+
+Generate a random workspace name for testing to avoid conflicts.
+"""
+function random_workspace_name()
+    return "test_workspace_$(rand(1000:9999))"
+end
