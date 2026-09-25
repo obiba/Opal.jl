@@ -90,4 +90,13 @@ export opal_task
 export opal_task_cancel
 export opal_task_wait
 
+include("opal_valueset.jl")
+export opal_valueset
+export opal_variable
+export opal_variables
+export opal_variable_summary
+export opal_attribute_values
+
+export opal_as_md_table
+
 end
