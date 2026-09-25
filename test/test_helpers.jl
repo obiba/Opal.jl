@@ -31,7 +31,7 @@ Get the Opal server URL for testing from environment variable.
 Defaults to "https://opal-demo.obiba.org" if not set.
 """
 function get_test_url()
-    get(ENV, "OPAL_TEST_URL", "https://opal-demo.obiba.org")
+    return get(ENV, "OPAL_TEST_URL", "https://opal-demo.obiba.org")
 end
 
 """
@@ -67,7 +67,7 @@ Returns a dictionary with arrays for id, mpg, cyl, disp, hp, and name.
 This is a simplified equivalent of R's mtcars dataset.
 """
 function make_test_dataset()
-    Dict(
+    return Dict(
         "id" => collect(1:10),
         "mpg" => [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2],
         "cyl" => [6, 6, 4, 6, 8, 6, 8, 4, 4, 6],
@@ -95,7 +95,7 @@ Create a test dataset with repeatable entries (multiple rows per ID).
 Used for testing repeatable variable handling.
 """
 function make_test_dataset_with_repeatables()
-    Dict(
+    return Dict(
         "id" => [1, 2, 3, 1, 1, 2, 2, 3, 3, 4],
         "id2" => [1, 2, 3, 4, 5, 6, 7, 8, 9, missing],
         "sex" => [missing, "M", "F", "M", "M", missing, "F", "F", "M", missing],

@@ -125,7 +125,7 @@ function _handleError(opal, response)
         end
     end
 
-    throw(ErrorException(status_msg))
+    return throw(ErrorException(status_msg))
 end
 
 """

@@ -45,7 +45,7 @@ function opal_get(
     else
         throw(ErrorException("Downloading to file is not supported for GET requests."))
         open(outFile, "w") do io
-            HTTP.request(
+            return HTTP.request(
                 "GET",
                 url;
                 query=query,

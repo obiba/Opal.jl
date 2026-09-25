@@ -47,7 +47,7 @@ Get a resource reference of a project.
 - `resource::AbstractString`: Name of the resource in the project
 """
 function opal_resource(opal::OpalObject, project::AbstractString, resource::AbstractString)
-    opal_get(opal, "project", project, "resource", resource)
+    return opal_get(opal, "project", project, "resource", resource)
 end
 
 """
@@ -68,7 +68,7 @@ function opal_resource_exists(
     catch
         nothing
     end
-    !isnothing(res)
+    return !isnothing(res)
 end
 
 """
@@ -86,7 +86,7 @@ Note: This is a placeholder implementation. The original R implementation uses s
 function opal_resource_get(
     opal::OpalObject, project::AbstractString, resource::AbstractString
 )
-    throw(
+    return throw(
         ErrorException(
             "opal_resource_get is not yet fully implemented. This function requires server-side R session management (opal.assign.resource, opal.execute, opal.symbol_rm) which is not yet available.",
         ),
@@ -145,7 +145,7 @@ function opal_resource_create(
         end
     end
 
-    opal_resource_extension_create(
+    return opal_resource_extension_create(
         opal,
         project,
         name,

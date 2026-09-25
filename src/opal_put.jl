@@ -49,7 +49,7 @@ function opal_put(
     else
         # Write to file
         open(outFile, "w") do io
-            HTTP.request(
+            return HTTP.request(
                 "PUT",
                 url;
                 query=query,

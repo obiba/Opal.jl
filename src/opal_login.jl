@@ -29,11 +29,11 @@ struct SSLAuth <: AbstractAuthStrategy
 end
 
 function authenticate!(opal, strategy::UserPasswordAuth)
-    opal.authorization = _authorizationHeader(strategy.username, strategy.password)
+    return opal.authorization = _authorizationHeader(strategy.username, strategy.password)
 end
 
 function authenticate!(opal, strategy::TokenAuth)
-    opal.token = _tokenHeader(strategy.token)
+    return opal.token = _tokenHeader(strategy.token)
 end
 
 function authenticate!(opal, strategy::SSLAuth)
@@ -41,7 +41,7 @@ function authenticate!(opal, strategy::SSLAuth)
         opal.config["cainfo"] = _getPEMFilePath(opal.config["cainfo"])
     end
     opal.config["sslcert"] = _getPEMFilePath(strategy.sslcert)
-    opal.config["sslkey"] = _getPEMFilePath(strategy.sslkey)
+    return opal.config["sslkey"] = _getPEMFilePath(strategy.sslkey)
 end
 
 """

@@ -156,7 +156,7 @@ Note: This is a simplified implementation that assumes Opal 4.0+ is available. T
 function opal_table_get(
     opal::OpalObject, project::String, table::String; id_name::String="id"
 )
-    throw(
+    return throw(
         ErrorException(
             "opal_table_get is not yet fully implemented. This function requires additional dependencies (DataFrames.jl, file operations) and server-side R session management.",
         ),

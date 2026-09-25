@@ -52,7 +52,7 @@ function opal_post(
     else
         # Write to file
         open(outFile, "w") do io
-            HTTP.request(
+            return HTTP.request(
                 "POST",
                 url;
                 query=query,
