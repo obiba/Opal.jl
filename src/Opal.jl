@@ -52,4 +52,8 @@ export opal_resource_create
 export opal_resource_extension_create
 export opal_resource_delete
 
+include("opal_datasource.jl")
+export opal_datasources
+export opal_datasource
+
 end
