@@ -77,4 +77,11 @@ export opal_assign_script
 export opal_assign_data
 export opal_assign_resource
 
+include("opal_command.jl")
+export opal_commands
+export opal_command
+export opal_command_rm
+export opal_commands_rm
+export opal_command_result
+
 end
