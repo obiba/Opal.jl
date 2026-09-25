@@ -1,8 +1,7 @@
 # Opal.jl
 
-[![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://obiba.github.io/Opal.jl/dev)
 [![Docs workflow Status](https://github.com/obiba/Opal.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/obiba/Opal.jl/actions/workflows/Docs.yml?query=branch%3Amain)
-[![Test workflow status](https://github.com/obiba/Opal.jl/workflows/Test.yml/badge.svg?branch=refactor-clean-packaging)](https://github.com/obiba/Opal.jl/actions/workflows/Test.yml?query=branch%main)
+[![Test workflow status](https://github.com/obiba/Opal.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/obiba/Opal.jl/actions/workflows/Test.yml?query=branch%3Amain)
 [![Build Status](https://github.com/obiba/Opal.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/obiba/Opal.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
@@ -83,27 +82,11 @@ OPAL_TEST_URL="https://opal-demo.obiba.org" julia --project test/integration/tes
 
 ### Test Organization
 
-```bash
-test/
-├── runtests.jl           # Main test runner
-├── test_helpers.jl       # Shared test helper functions
-├── unit/                 # Unit tests (no server required)
-│   ├── test_utils.jl     # Utility function tests
-│   ├── test_rest.jl      # REST operation tests
-│   ├── test_session.jl   # Session management tests
-│   ├── test_table.jl     # Table operation tests
-│   └── test_resource.jl  # Resource operation tests
-└── integration/          # Integration tests (live server required)
-    ├── test_login_logout.jl
-    ├── test_session.jl
-    ├── test_table.jl
-    └── test_resource.jl
-```
-
-## Development
-
-For development guidelines, code style, and workflow instructions, see [AGENTS.md](AGENTS.md).
+The suite is split into `test/unit/` (mocked, no server) and `test/integration/` (live Opal
+server). `test/runtests.jl` wires both with SafeTestsets, so every test file runs in an
+isolated module; integration test files include the shared helpers from `test/test_helpers.jl`
+and skip cleanly when `OPAL_TEST_URL` is unset.
 
 ## License
 
-This project is licensed under the GPL-3.0 license.
+This project is licensed under the MIT license.
