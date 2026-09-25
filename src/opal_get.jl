@@ -1,5 +1,19 @@
 # TODO: investigate if we can use the terminate_on functionality in Julia.
 # This would rely on passing a function to the retry_check kwarg
+"""
+    opal_get(opal, args...; query=Dict(), acceptType="application/json", outFile=nothing, callback=nothing, retries=3)
+
+Generic REST resource retrieval.
+
+# Arguments
+- `opal::OpalObject`: Opal object
+- `args...`: Resource path segments
+- `query::Dict{String,Any}=Dict{String,Any}()`: Named dictionary of query parameters
+- `acceptType::String="application/json"`: The accept type of the response
+- `outFile::Union{String,Nothing}=nothing`: Not supported; throws an error if not nothing (default)
+- `callback::Union{Function,Nothing}=nothing`: A callback function to handle the response object
+- `retries::Int=3`: Number of retries
+"""
 function opal_get(
     opal::OpalObject,
     args...;
