@@ -62,4 +62,11 @@ export opal_workspace_save
 export opal_workspace_restore
 export opal_workspace_rm
 
+include("opal_symbol.jl")
+export opal_symbols
+export opal_symbol_rm
+export opal_rm
+export opal_symbol_save
+export opal_symbol_import
+
 end
