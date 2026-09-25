@@ -84,4 +84,10 @@ export opal_command_rm
 export opal_commands_rm
 export opal_command_result
 
+include("opal_task.jl")
+export opal_tasks
+export opal_task
+export opal_task_cancel
+export opal_task_wait
+
 end
