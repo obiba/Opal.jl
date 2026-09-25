@@ -69,4 +69,12 @@ export opal_rm
 export opal_symbol_save
 export opal_symbol_import
 
+include("opal_assign.jl")
+export opal_assign
+export opal_assign_table
+export opal_assign_table_tibble
+export opal_assign_script
+export opal_assign_data
+export opal_assign_resource
+
 end
