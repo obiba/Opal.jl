@@ -56,4 +56,10 @@ include("opal_datasource.jl")
 export opal_datasources
 export opal_datasource
 
+include("opal_workspace.jl")
+export opal_workspaces
+export opal_workspace_save
+export opal_workspace_restore
+export opal_workspace_rm
+
 end
