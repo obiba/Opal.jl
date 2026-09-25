@@ -45,9 +45,9 @@ jobs:
         run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using UrbanTethysChloris
-            DocMeta.setdocmeta!(UrbanTethysChloris, :DocTestSetup, :(using UrbanTethysChloris); recursive=true)
-            doctest(UrbanTethysChloris)'
+            using Opal
+            DocMeta.setdocmeta!(Opal, :DocTestSetup, :(using Opal); recursive=true)
+            doctest(Opal)'
       - name: Generate and deploy documentation
         run: julia --project=docs docs/make.jl
         env:

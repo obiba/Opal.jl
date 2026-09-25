@@ -1,0 +1,102 @@
+module Opal
+
+using URIs: URI, escapepath
+using Base64: base64encode
+using HTTP: request, header
+using HTTP.Exceptions: StatusError
+using JSON
+using DataFrames: DataFrame, transform!, select!, ByRow, Not
+
+include("OpalObject.jl")
+include("utils.jl")
+
+include("opal_login.jl")
+export opal_login
+
+include("opal_logout.jl")
+export opal_logout
+
+include("opal_get.jl")
+export opal_get
+
+include("opal_post.jl")
+export opal_post
+
+include("opal_put.jl")
+export opal_put
+
+include("opal_delete.jl")
+export opal_delete
+
+include("opal_session.jl")
+export opal_session
+export opal_session_get
+export opal_session_exists
+export opal_session_running
+export opal_session_delete
+
+include("opal_table.jl")
+export opal_table
+export opal_table_exists
+export opal_table_delete
+export opal_table_create
+export opal_table_truncate
+export opal_table_get
+
+include("opal_resource.jl")
+export opal_resources
+export opal_resource
+export opal_resource_exists
+export opal_resource_get
+export opal_resource_create
+export opal_resource_extension_create
+export opal_resource_delete
+
+include("opal_datasource.jl")
+export opal_datasources
+export opal_datasource
+
+include("opal_workspace.jl")
+export opal_workspaces
+export opal_workspace_save
+export opal_workspace_restore
+export opal_workspace_rm
+
+include("opal_symbol.jl")
+export opal_symbols
+export opal_symbol_rm
+export opal_rm
+export opal_symbol_save
+export opal_symbol_import
+
+include("opal_assign.jl")
+export opal_assign
+export opal_assign_table
+export opal_assign_table_tibble
+export opal_assign_script
+export opal_assign_data
+export opal_assign_resource
+
+include("opal_command.jl")
+export opal_commands
+export opal_command
+export opal_command_rm
+export opal_commands_rm
+export opal_command_result
+
+include("opal_task.jl")
+export opal_tasks
+export opal_task
+export opal_task_cancel
+export opal_task_wait
+
+include("opal_valueset.jl")
+export opal_valueset
+export opal_variable
+export opal_variables
+export opal_variable_summary
+export opal_attribute_values
+
+export opal_as_md_table
+
+end
