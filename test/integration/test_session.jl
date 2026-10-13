@@ -28,6 +28,37 @@ include("../test_helpers.jl")
     end
 end
 
+@testset "Session With Connection Options" begin
+    check_skip() && return nothing
+
+    username, password = get_test_credentials()
+    url = get_test_url()
+
+    # connection options must apply to every request after login, not
+    # only at login (bug #7): a successful call with
+    # require_ssl_verification=false proves the opts are carried through
+    o = opal_login(;
+        username=username,
+        password=password,
+        url=url,
+        opts=Dict("require_ssl_verification" => false),
+    )
+
+    try
+        @test o.config["require_ssl_verification"] == false
+
+        # a request made after login (not at login) with the option set
+        projects = opal_get(o, "projects")
+        @test isa(projects, Union{Vector,Dict})
+
+        # session creation also goes through the request config
+        session_id = opal_session(o)
+        @test !isnothing(session_id)
+    finally
+        opal_logout(o)
+    end
+end
+
 @testset "Session Get Details" begin
     check_skip() && return nothing
 
