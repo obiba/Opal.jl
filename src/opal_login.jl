@@ -186,11 +186,11 @@ function _opal_login(;
     end
 
     opal.uprofile = _handleResponse!(opal, r)
-    # opal.username = opal.uprofile["principal"]
+    opal.username = opal.uprofile["principal"]
 
-    # if get(opal.uprofile, "otpRequired", false)
-    #     @warn "Enabling 2FA is required, connect to Opal web page to set up your secret."
-    # end
+    if get(opal.uprofile, "otpRequired", false)
+        @warn "Enabling 2FA is required, connect to Opal web page to set up your secret."
+    end
     opal.context = context
 
     return opal

@@ -1,6 +1,6 @@
 
 mutable struct OpalObject
-    username::String
+    username::Union{String,Nothing}
     url::String
     name::String
     version::Union{VersionNumber,Missing}
