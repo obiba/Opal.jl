@@ -548,13 +548,43 @@ function _taskIdFromLocation(location)
 end
 
 """
+Extract the filename from a Content-Disposition header value.
+
+Handles quoted (`attachment; filename="data.csv"`), unquoted
+(`attachment; filename=data.csv`) and RFC 5987 extended
+(`attachment; filename*=UTF-8''data.csv`) forms. Returns nothing when
+no filename is found.
+"""
+function _attachmentFilename(disposition)
+    # RFC 5987 extended form takes precedence: filename*=UTF-8''data.csv
+    m = match(r"filename\*=(?:[^']*''){0,2}([^;]+)", disposition)
+    if !isnothing(m)
+        filename = strip(String(m.captures[1]), '"')
+        return try
+            unescapeuri(filename)
+        catch
+            filename
+        end
+    end
+    m = match(r"filename\s*=\s*\"([^\"]*)\"", disposition)
+    if !isnothing(m)
+        return String(m.captures[1])
+    end
+    m = match(r"filename\s*=\s*([^;]+)", disposition)
+    if !isnothing(m)
+        return strip(String(m.captures[1]))
+    end
+    return nothing
+end
+
+"""
 Handle response attachment.
 """
 function _handleAttachment(opal, response, disposition)
     headers = HTTP.headers(response)
     content = _getContent(opal, response)
 
-    filename = split(disposition, "\"")[2]
+    filename = _attachmentFilename(disposition)
     filetype = _guessType(filename)
     content_type = nothing
     for (key, value) in headers
