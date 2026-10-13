@@ -160,8 +160,10 @@ function _opal_login(;
         headers["X-XSRF-Token"] = opal.csrf
     end
 
+    # cookies=true keeps the session cookie in the (global) cookie jar so
+    # that the two-factor retry below is bound to the same session
     r = try
-        request("GET", profileUrl; headers=headers, opal.config...)
+        request("GET", profileUrl; headers=headers, cookies=true, opal.config...)
     catch e
         if isa(e, StatusError) && e.status == 401
             optHeader = header(e.response, "WWW-Authenticate", "")
@@ -174,7 +176,6 @@ function _opal_login(;
                     profileUrl;
                     headers=headers,
                     cookies=true,
-                    cookiejar=cookiejar,
                     opal.config...,
                 )
             else
