@@ -8,7 +8,7 @@ mutable struct OpalObject
     uprofile::Dict{String,Any}
     authorization::Union{String,Nothing}
     token::Union{String,Nothing}
-    config::Dict{Symbol,Any}
+    config::Dict{String,Any}
     rid::Union{String,Nothing}
     restore::Union{String,Nothing}
     profile::Union{String,Nothing}
@@ -27,7 +27,7 @@ function OpalObject(; kwargs...)
         get(kwargs, :uprofile, Dict{String,Any}()),
         get(kwargs, :authorization, nothing),
         get(kwargs, :token, nothing),
-        get(kwargs, :config, Dict{Symbol,Any}()),
+        get(kwargs, :config, Dict{String,Any}()),
         get(kwargs, :rid, nothing),
         get(kwargs, :restore, nothing),
         get(kwargs, :profile, nothing),

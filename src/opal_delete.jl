@@ -38,6 +38,7 @@ function opal_delete(
         status_exception=false,
         retry=true,
         retries=retries,
+        _requestConfig(opal)...,
     )
 
     return _handleResponseOrCallback!(opal, r, callback)

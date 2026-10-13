@@ -3,6 +3,83 @@
 
 using HTTP
 using JSON
+using MbedTLS: MbedTLS
+
+"""
+Build an MbedTLS SSLConfig for a request: verification toggle, optional
+CA bundle (cainfo) and optional client certificate/key (mutual TLS).
+"""
+function _sslConfig(;
+    verify::Bool=true,
+    cainfo::Union{String,Nothing}=nothing,
+    sslcert::Union{String,Nothing}=nothing,
+    sslkey::Union{String,Nothing}=nothing,
+)
+    conf = MbedTLS.SSLConfig(verify)
+    if !isnothing(cainfo)
+        path = _getPEMFilePath(cainfo)
+        isfile(path) || throw(ErrorException("CA bundle file not found: $(path)"))
+        MbedTLS.ca_chain!(conf, MbedTLS.crt_parse(read(path, String)))
+    end
+    if !isnothing(sslcert) && !isnothing(sslkey)
+        cert = MbedTLS.crt_parse_file(_getPEMFilePath(sslcert))
+        key = MbedTLS.parse_keyfile(_getPEMFilePath(sslkey))
+        MbedTLS.own_cert!(conf, cert, key)
+    end
+    return conf
+end
+
+"""
+Convert the Opal connection options into HTTP.request keyword arguments.
+
+Generic options are passed through as-is; curl/httr-style options are
+translated: `cainfo`/`sslcert`/`sslkey`/`ssl.verifypeer`/`ssl.verifyhost`
+are combined into an `sslconfig`, and `require_ssl_verification` is
+passed through natively.
+"""
+function _requestConfig(opal)
+    kwargs = Pair{Symbol,Any}[]
+    opts = opal.config
+    verify = true
+    cainfo = nothing
+    sslcert = nothing
+    sslkey = nothing
+
+    for (key, value) in opts
+        k = String(key)
+        if k in ("cainfo",)
+            cainfo = value
+        elseif k in ("sslcert",)
+            sslcert = value
+        elseif k in ("sslkey",)
+            sslkey = value
+        elseif k in ("ssl_verifypeer", "ssl.verifypeer")
+            if isa(value, Bool) && !value
+                verify = false
+            end
+        elseif k in ("ssl_verifyhost", "ssl.verifyhost")
+            # host name verification is part of require_ssl_verification
+            if isa(value, Bool) && !value
+                verify = false
+            end
+        elseif k == "require_ssl_verification"
+            if isa(value, Bool) && !value
+                verify = false
+            end
+        else
+            push!(kwargs, Symbol(k) => value)
+        end
+    end
+
+    if !verify || !isnothing(cainfo) || !isnothing(sslcert)
+        push!(
+            kwargs,
+            :sslconfig =>
+                _sslConfig(; verify=verify, cainfo=cainfo, sslcert=sslcert, sslkey=sslkey),
+        )
+    end
+    return kwargs
+end
 
 """
 Extract opalsid from cookie data.

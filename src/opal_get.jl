@@ -41,6 +41,7 @@ function opal_get(
             logerrors=logerrors,
             retry=true,
             retries=retries,
+            _requestConfig(opal)...,
         )
     else
         throw(ErrorException("Downloading to file is not supported for GET requests."))
@@ -54,6 +55,7 @@ function opal_get(
                 logerrors=logerrors,
                 retry=true,
                 retries=retries,
+                _requestConfig(opal)...,
             )
         end
     end

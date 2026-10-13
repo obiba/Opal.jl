@@ -48,6 +48,7 @@ function opal_post(
             status_exception=false,
             retry=true,
             retries=retries,
+            _requestConfig(opal)...,
         )
     else
         # Write to file
@@ -62,6 +63,7 @@ function opal_post(
                 status_exception=false,
                 retry=true,
                 retries=retries,
+                _requestConfig(opal)...,
             )
         end
     end

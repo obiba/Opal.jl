@@ -87,3 +87,16 @@ end
     @test isdefined(Opal, :opal_delete)
     @test isdefined(Opal, :opal_get)
 end
+
+@testset "Connection Options Applied to All Requests" begin
+    # _requestConfig must be spread into every request call so that
+    # settings like require_ssl_verification or client certificates
+    # apply after login too (opal_get, opal_post, opal_put, opal_delete
+    # and the login profile GETs)
+    for file in ("opal_get.jl", "opal_post.jl", "opal_put.jl", "opal_delete.jl")
+        src = read(joinpath(dirname(@__DIR__), "..", "src", file), String)
+        @test occursin("_requestConfig(opal)...", src)
+    end
+    login_src = read(joinpath(dirname(@__DIR__), "..", "src", "opal_login.jl"), String)
+    @test count("_requestConfig(opal)...", login_src) == 2
+end
