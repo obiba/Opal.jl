@@ -83,7 +83,7 @@ function opal_task_cancel(opal::OpalObject, id::String)
 end
 
 """
-    opal_task_wait(opal, id; max=nothing)
+    opal_task_wait(opal, id; maxtime=nothing)
 
 Wait for a task to complete. The task completion is defined by its status: SUCCEEDED,
 FAILED or CANCELED.
@@ -91,12 +91,13 @@ FAILED or CANCELED.
 # Arguments
 - `opal::OpalObject`: Opal connection object
 - `id::String`: Task identifier
-- `max::Union{Nothing, Int}=nothing`: Maximum time (in seconds) to wait for the task completion
+- `maxtime::Union{Nothing, Int}=nothing`: Maximum time (in seconds) to wait for the task completion
 """
-function opal_task_wait(opal::OpalObject, id::String; max::Union{Nothing,Int}=nothing)
+function opal_task_wait(opal::OpalObject, id::String; maxtime::Union{Nothing,Int}=nothing)
     status = "NA"
     waited = 0.0
-    while status ∉ ("SUCCEEDED", "FAILED", "CANCELED") && (isnothing(max) || waited <= max)
+    while status ∉ ("SUCCEEDED", "FAILED", "CANCELED") &&
+          (isnothing(maxtime) || waited <= maxtime)
         # delay is proportional to the time waited, but no more than 10s
         delay = min(10, max(1, round(waited / 10)))
         sleep(delay)
