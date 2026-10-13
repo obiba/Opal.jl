@@ -23,3 +23,19 @@ end
     @test isempty(opal_attribute_values(attributes; name="missing"))
     @test isempty(opal_attribute_values([]))
 end
+
+@testset "Repeatable Column Logic" begin
+    # Opal names the field isRepeatable; absence means false. The old
+    # haskey(item, "repeatable") check tested the wrong name and only
+    # key existence, not the value.
+    items = [
+        Dict("name" => "v1", "isRepeatable" => true),
+        Dict("name" => "v2", "isRepeatable" => false),
+        Dict("name" => "v3"),
+    ]
+    repeatable = Bool[]
+    for item in items
+        push!(repeatable, get(item, "isRepeatable", false))
+    end
+    @test repeatable == [true, false, false]
+end

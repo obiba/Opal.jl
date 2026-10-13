@@ -189,7 +189,7 @@ function opal_variables(
         push!(unit, _nullToNA(get(item, "unit", nothing)))
         push!(referencedEntityType, _nullToNA(get(item, "referencedEntityType", nothing)))
         push!(mimeType, _nullToNA(get(item, "mimeType", nothing)))
-        push!(repeatable, haskey(item, "repeatable"))
+        push!(repeatable, get(item, "isRepeatable", false))
         push!(occurrenceGroup, _nullToNA(get(item, "occurrenceGroup", nothing)))
         idxcol = get(item, "index", missing)
         push!(index, isnothing(idxcol) ? missing : idxcol)
