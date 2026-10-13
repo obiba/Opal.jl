@@ -259,6 +259,31 @@ end
     @test occursin("profile: default", printed)
 end
 
+@testset "Task Id From Location" begin
+    # accepts values with or without leading slash, and full URLs
+    @test Opal._taskIdFromLocation("/shell/command/42") == "42"
+    @test Opal._taskIdFromLocation("shell/command/42") == "42"
+    @test Opal._taskIdFromLocation("/ws/shell/command/42") == "42"
+    @test Opal._taskIdFromLocation("https://opal.example.org/ws/shell/command/42") == "42"
+    @test Opal._taskIdFromLocation("https://opal.example.org/shell/command/42") == "42"
+    @test Opal._taskIdFromLocation("") isa Nothing
+end
+
+@testset "Attachment Filename" begin
+    # quoted form
+    @test Opal._attachmentFilename("attachment; filename=\"data.csv\"") == "data.csv"
+    # unquoted form (throws with the old split-on-quotes parsing)
+    @test Opal._attachmentFilename("attachment; filename=data.csv") == "data.csv"
+    # RFC 5987 extended form
+    @test Opal._attachmentFilename("attachment; filename*=UTF-8''d%20ata.csv") ==
+        "d ata.csv"
+    # quoted with additional parameters
+    @test Opal._attachmentFilename("attachment; filename=\"my file.csv\"; size=12") ==
+        "my file.csv"
+    # no filename
+    @test Opal._attachmentFilename("attachment") isa Nothing
+end
+
 @testset "Request Config Mapping" begin
     opal = Opal.OpalObject(
         name="test",
@@ -299,4 +324,29 @@ end
     # cainfo triggers sslconfig build; missing file errors
     opal.config = Dict{String,Any}("cainfo" => "/nonexistent/ca.pem")
     @test_throws ErrorException Opal._requestConfig(opal)
+end
+
+@testset "Attachment Response Handling" begin
+    opal = Opal.OpalObject(
+        name="test",
+        url="https://opal.example.org",
+        username="admin",
+        password=nothing,
+        token=nothing,
+        sid=nothing,
+        version=missing,
+        rid=nothing,
+        restore=nothing,
+    )
+    # unquoted filename in Content-Disposition must not throw
+    resp = HTTP.Response(
+        200,
+        [
+            "Content-Type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=data.csv",
+        ];
+        body="a,b\n1,2\n",
+    )
+    content = Opal._handleResponse!(opal, resp)
+    @test content == "a,b\n1,2\n"
 end
