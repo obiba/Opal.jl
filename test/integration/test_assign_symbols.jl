@@ -39,3 +39,33 @@ include("../test_helpers.jl")
 
     opal_logout(o)
 end
+
+@testset "Variables Repeatable Column" begin
+    check_skip() && return nothing
+
+    o = make_test_opal()
+    symbol_name = "rep_df_$(rand(1000:9999))"
+
+    try
+        # import a small table with a repeatable variable (CNSIM1 has
+        # multiple rows per entity id): opal_variables must return a real
+        # Bool repeatable column (bug #9: it used to be all false)
+        opal_assign_table_tibble(o, symbol_name, "CNSIM.CNSIM1"; id_name="id")
+        opal_symbol_import(o, symbol_name, "RSRC"; wait=true)
+
+        variables = opal_variables(o, "RSRC", symbol_name)
+        @test variables isa DataFrame
+        @test hasproperty(variables, :repeatable)
+        @test eltype(variables.repeatable) == Bool
+
+        # clean up the imported table
+        opal_table_delete(o, "RSRC", symbol_name; silent=true)
+    catch
+        # if the import failed, still try to clean up
+        opal_table_delete(o, "RSRC", symbol_name; silent=true)
+        rethrow()
+    finally
+        opal_rm(o, symbol_name)
+        opal_logout(o)
+    end
+end
