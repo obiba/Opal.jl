@@ -3,6 +3,7 @@
 
 using Test
 using Opal
+using DataFrames
 include("../test_helpers.jl")
 
 @testset "Login with Username/Password" begin
@@ -132,5 +133,67 @@ end
         @test isa(projects, Union{Vector,Dict})
 
         opal_logout(o)
+    end
+end
+
+@testset "Logout With Saved Workspace" begin
+    check_skip() && return nothing
+
+    username, password = get_test_credentials()
+    url = get_test_url()
+
+    o = opal_login(; username=username, password=password, url=url)
+    ws_id = nothing
+
+    try
+        # create an R session and assign a symbol so the workspace is
+        # worth saving
+        opal_session(o)
+        opal_assign_script(o, "keepme", "function(x) x + 1")
+
+        # logout with save=true: must return the workspace id (the rid)
+        # instead of nothing
+        ws_id = opal_logout(o; save=true)
+        @test !isnothing(ws_id)
+        @test ws_id isa String
+
+        # the saved workspace must be listed (opal_workspaces returns a
+        # DataFrame with a name column; the workspace name is the rid)
+        o2 = opal_login(; username=username, password=password, url=url)
+        try
+            workspaces = opal_workspaces(o2)
+            @test !isnothing(workspaces)
+            @test workspaces isa DataFrame
+            @test ws_id in workspaces.name
+
+            # and restorable in a new session (Opal 4.5+; older servers
+            # only warn)
+            if ismissing(o2.version) || Opal._versionCompare(o2, "4.5") >= 0
+                opal_workspace_restore(o2, ws_id)
+                opal_session(o2)
+                symbols = opal_symbols(o2)
+                symbols_list(s) = s isa AbstractVector ? s : [string(s)]
+                @test "keepme" in symbols_list(symbols)
+            else
+                @test_skip "Workspace restore requires Opal 4.5+"
+            end
+
+            # clean up the workspace
+            opal_workspace_rm(o2, ws_id)
+        finally
+            opal_logout(o2)
+        end
+    finally
+        if ws_id isa String
+            # make sure the workspace does not leak if a test failed early
+            oc = opal_login(; username=username, password=password, url=url)
+            try
+                opal_workspace_rm(oc, ws_id)
+            catch
+                # ignore cleanup errors
+            finally
+                opal_logout(oc)
+            end
+        end
     end
 end

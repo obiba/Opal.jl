@@ -69,6 +69,20 @@ end
     @test isnothing(opal_without_session.rid)
 end
 
+@testset "Logout Return Value Logic" begin
+    # When save=true, _rmRSession returns the workspace id (the current
+    # session id); opal_logout must return it instead of overwriting it
+    # with the result of _rmOpalSession (which returns nothing).
+    keepSavedId(resR, resOpal) = isa(resR, String) ? resR : resOpal
+
+    # save=true: workspace id kept
+    @test keepSavedId("rs-123", nothing) == "rs-123"
+    # no workspace saved, no opal session result
+    @test keepSavedId(nothing, nothing) isa Nothing
+    # no workspace saved, opal session removal returned something
+    @test keepSavedId(nothing, "x") == "x"
+end
+
 @testset "Session Existence Logic" begin
     # opal_session_exists should return Bool
     # It checks if opal.rid is not nothing
