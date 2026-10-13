@@ -530,6 +530,24 @@ function _guessType(filename)
 end
 
 """
+Extract the task identifier from a command Location header value.
+
+Accepts values with or without a leading slash: `/shell/command/42`,
+`shell/command/42` and full URLs. Returns the last path segment.
+"""
+function _taskIdFromLocation(location)
+    path = location
+    idx = findfirst("://", path)
+    if !isnothing(idx)
+        slash = findnext('/', path, idx[end] + 1)
+        path = isnothing(slash) ? "" : path[(slash + 1):end]
+    end
+    path = lstrip(path, '/')
+    isempty(path) && return nothing
+    return split(path, '/')[end]
+end
+
+"""
 Handle response attachment.
 """
 function _handleAttachment(opal, response, disposition)

@@ -181,8 +181,8 @@ function opal_symbol_import(
             callback=(_handleResponseLocation!),
         )
         if !isnothing(location)
-            # /shell/command/<id>
-            task = location[16:end]
+            # /shell/command/<id> (accepts values with or without leading slash)
+            task = _taskIdFromLocation(location)
             if wait
                 status = "NA"
                 waited = 0.0
