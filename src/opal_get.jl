@@ -1,5 +1,3 @@
-# TODO: investigate if we can use the terminate_on functionality in Julia.
-# This would rely on passing a function to the retry_check kwarg
 """
     opal_get(opal, args...; query=Dict(), acceptType="application/json", outFile=nothing, callback=nothing, retries=3)
 
@@ -23,42 +21,36 @@ function opal_get(
     callback::Union{Function,Nothing}=nothing,
     retries::Int=3,
 )
-    r = nothing
     logerrors = false
     headers = Dict("Accept" => acceptType)
 
+    # Add authorization headers
+    if !isnothing(opal.authorization)
+        headers["Authorization"] = opal.authorization
+    end
+    if !isnothing(opal.token)
+        headers["X-Opal-Auth"] = opal.token
+    end
     if !isnothing(opal.csrf)
         headers["X-XSRF-Token"] = opal.csrf
     end
 
-    url = _url(opal, args...)
-    r = if isnothing(outFile)
-        request(
-            "GET",
-            url;
-            query=query,
-            headers=headers,
-            logerrors=logerrors,
-            retry=true,
-            retries=retries,
-            _requestConfig(opal)...,
-        )
-    else
+    if !isnothing(outFile)
         throw(ErrorException("Downloading to file is not supported for GET requests."))
-        open(outFile, "w") do io
-            return HTTP.request(
-                "GET",
-                url;
-                query=query,
-                headers=headers,
-                response_stream=io,
-                logerrors=logerrors,
-                retry=true,
-                retries=retries,
-                _requestConfig(opal)...,
-            )
-        end
     end
+
+    url = _url(opal, args...)
+    r = request(
+        "GET",
+        url;
+        query=query,
+        headers=headers,
+        logerrors=logerrors,
+        status_exception=false,
+        retry=true,
+        retries=retries,
+        _requestConfig(opal)...,
+    )
 
     return _handleResponseOrCallback!(opal, r, callback)
 end

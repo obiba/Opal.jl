@@ -3,6 +3,7 @@
 
 using Test
 using Opal
+using HTTP
 
 @testset "GET Operation Logic" begin
     # Test that opal_get function signature is correct
@@ -86,6 +87,32 @@ end
     @test isdefined(Opal, :opal_put)
     @test isdefined(Opal, :opal_delete)
     @test isdefined(Opal, :opal_get)
+end
+
+@testset "GET Error and Auth Header Parity" begin
+    # opal_get must route HTTP errors into _handleError like post/put/delete
+    # (status_exception=false) so that Opal's error message is not lost,
+    # and must send the Authorization / X-Opal-Auth headers
+    src = read(joinpath(dirname(@__DIR__), "..", "src", "opal_get.jl"), String)
+    @test occursin("status_exception=false", src)
+    @test count("headers[\"Authorization\"]", src) == 1
+    @test count("headers[\"X-Opal-Auth\"]", src) == 1
+
+    # the response handler turns an error response into a meaningful
+    # ErrorException (this is what status_exception=false feeds into)
+    opal = Opal.OpalObject(
+        name="test",
+        url="https://opal.example.org",
+        username="admin",
+        password=nothing,
+        token=nothing,
+        sid="abc",
+        version=v"3.0.0",
+        rid=nothing,
+        restore=nothing,
+    )
+    resp = HTTP.Response(404, ["Content-Type" => "application/json"]; body="{}")
+    @test_throws ErrorException Opal._handleResponse!(opal, resp)
 end
 
 @testset "Connection Options Applied to All Requests" begin
